@@ -1,1 +1,24 @@
 /* You can add global styles to this file, and also import other style files */
+ 
+body {
+    font-family: "Verdana", Geneva, sans-serif;
+}
+table, td {
+    border: 1px solid green;                
+    align-content: center;
+    text-align: center;
+}
+td {
+    height:30px;
+    width: 30px;
+    background-color: darkseagreen;
+    font-size: 80%;
+}
+.fa-cloud {
+    color:orange;
+}
+.coord, th{
+    background-color: white;
+    border:none;
+    text-align: center;
+}

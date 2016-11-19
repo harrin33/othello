@@ -6,5 +6,7 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'app works! no really, it does - neil. And another thing, this is a committed change.';
+  title = 'Othello';
+  row = '<tr><td>another table</td></tr>';
+  celltext = 'cell contents';
 }
