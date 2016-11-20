@@ -7,6 +7,6 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'Browser battle';
-  row = '<tr><td>another table</td></tr>';
-  celltext = 'cell contents';
+  /*row = '<tr><td>another table</td></tr>';*/
+  /*celltext = 'cell contents';*/
 }

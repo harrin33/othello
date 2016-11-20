@@ -14,8 +14,11 @@ td {
     background-color: darkseagreen;
     font-size: 80%;
 }
-.fa-cloud {
-    color:orange;
+.fa-internet-explorer{
+    color:blue;
+}
+.fa-chrome{
+    color:white;
 }
 .coord, th{
     background-color: white;
