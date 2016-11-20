@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'Othello';
+  title = 'Browser battle';
   row = '<tr><td>another table</td></tr>';
   celltext = 'cell contents';
 }
