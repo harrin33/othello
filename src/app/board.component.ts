@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { Cell } from './cell';
-import { BoardState } from './board-state';
 import { GameController } from './game-controller';
 
 
