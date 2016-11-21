@@ -20,8 +20,15 @@ td {
 .fa-chrome{
     color:white;
 }
-.coord, th{
+.coord{
     background-color: white;
     border:none;
     text-align: center;
+}
+th {
+    background-color: white;
+    border:none;
+    text-align: center;
+    font-size: 80%;
+    font-weight: 200;
 }

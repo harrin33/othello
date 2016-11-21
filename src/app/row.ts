@@ -1,6 +1,6 @@
 import { Cell } from './cell';
 
 export class Row{
-    rowNo: number;
+    no: number;
     cells: Cell[];
 }

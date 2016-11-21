@@ -1,5 +1,5 @@
 export class Cell {
   row: number;
-  column: string;
+  column: number;
   diskType: string;
 }
