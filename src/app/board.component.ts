@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Cell } from './cell';
 import { Row } from './row';
 import { Board } from './board';
-import {AfterViewInit} from '@angular/core'; 
+import { AfterViewInit } from '@angular/core'; 
 
 @Component({
     selector:'game-board',
@@ -33,14 +33,36 @@ import {AfterViewInit} from '@angular/core';
                 </tr>
             </tbody>
         </table>
-        
-                
+        <div>&nbsp;</div>
+        <div> chrome count: {{chromeCount}}</div>
+        <div> ie count: {{ieCount}}</div>
     `
     
 })
 
 export class BoardComponent implements AfterViewInit{
-
+    
+    CHROME: string = 'chrome';
+    IE: string = 'ie';
+    LEFT: string = 'left';
+    RIGHT: string = 'right';
+    UP: string = 'up';
+    DOWN: string = 'down';
+    UPLEFT: string = 'upleft';
+    UPRIGHT: string = 'upright';
+    DOWNLEFT: string = 'downleft';
+    DOWNRIGHT: string = 'downright';
+    selectedCell: Cell;
+    adjacentCell: Cell;
+    currentPlayer: string;
+    direction: string;
+    chromeCount: number = 0;
+    ieCount: number = 0;
+    
+    log(s: string){
+        console.log(s); 
+    }
+    
     board: Board = {rows: this.buildBoard()}
                         
     buildBoard(): Row[] {
@@ -54,7 +76,7 @@ export class BoardComponent implements AfterViewInit{
     buildCells(rowno: number): Cell[] {
         let cellArray = [];
         for (var i = 0; i< 8; i++) { 
-            cellArray.push({row:rowno, column:i, diskType:''});
+            cellArray.push({row:rowno, column:i, type:''});
         }
         return cellArray;
     }
@@ -65,71 +87,154 @@ export class BoardComponent implements AfterViewInit{
     }
     
     
-    selectedCell: Cell;
-    currentPlayer: string;
-    
     onSelect(cell: Cell): void {
         this.selectedCell = cell;
-        if(this.currentPlayer == "ie"){
-            this.addIeDisk(cell);
-        } else {
-            this.addChromeDisk(cell);
+        this.logCellDetails(cell, 'selected cell ');
+        if(this.isMoveLegal(cell)){
+            if(this.currentPlayer == this.IE){
+                this.addDisk(cell.row, cell.column, this.IE);
+                this.currentPlayer = this.CHROME;
+            } else {
+                this.addDisk(cell.row, cell.column, this.CHROME);
+                this.currentPlayer = this.IE;
+            }    
+        }        
+    }
+    
+    logCellDetails(cell: Cell, comment: string){
+        this.log('current player: ' + this.currentPlayer);
+        this.log(comment + ' row: ' + cell.row + ' column: ' + cell.column + ' type: ' + cell.type);
+    }
+    
+    /*
+      A legal move requires two things: 
+        An adjacent cell of the opposite type. Continuing down the line of cells in the same
+        direction as this cell, there must be a cell of the same type at some point.  
+        An adjacent piece may be left, right, up, down, upLeft, upRight, downLeft or downRight. 
+     */
+    isMoveLegal(cell: Cell): boolean {
+        return(this.isFirstPieceLegal(cell));
+    }
+     
+    isFirstPieceLegal(cell: Cell): boolean {
+        var legal = false;
+                
+        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.LEFT)){
+            legal = true;
+            this.direction = this.LEFT;
+        }
+        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.RIGHT)){
+            legal = true;
+            this.direction = this.RIGHT;
+        }
+        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.UP)){
+            legal = true;
+            this.direction = this.UP;
+        }
+        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.DOWN)){
+            legal = true;
+            this.direction = this.DOWN;
+        }
+        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.UPLEFT)){
+            legal = true;
+            this.direction = this.UPLEFT;
+        }
+        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.UPRIGHT)){
+            legal = true;
+            this.direction = this.UPRIGHT;
+        }
+        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.DOWNLEFT)){
+            legal = true;
+            this.direction = this.DOWNLEFT;
+        }
+        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.DOWNRIGHT)){
+            legal = true;
+            this.direction = this.DOWNRIGHT;
+        }
+        return legal;
+    }
+    
+    nextCellSameTypeAsCurrentPlayer(cell: Cell, direction: string): boolean{
+        var nextCell = this.getAdjacentCell(cell, direction);
+        this.logCellDetails(nextCell, ' ' + direction);
+        if((nextCell.type != '') && (nextCell.type == this.currentPlayer)) {
+            return true;
+        }
+        return false;
+    }
+    
+    nextCellOppositeTypeToCurrentPlayer(cell: Cell, direction: string): boolean{
+        var nextCell = this.getAdjacentCell(cell, direction);
+        this.logCellDetails(nextCell, ' ' + direction);
+        if((nextCell.type != '') && (nextCell.type != this.currentPlayer)) {
+            return true;
+        }
+        return false;
+    }
+        
+    getAdjacentCell(cell: Cell, direction: string): Cell {
+        if(direction == this.LEFT){
+            return this.getLogicalCell(cell.row, cell.column -1);
+        }
+        if(direction == this.RIGHT){
+            return this.getLogicalCell(cell.row, cell.column +1);
+        }
+        if(direction == this.UP){
+            return this.getLogicalCell(cell.row -1, cell.column);
+        }
+        if(direction == this.DOWN){
+            return this.getLogicalCell(cell.row +1, cell.column);
+        }
+        if(direction == this.UPLEFT){
+            return this.getLogicalCell(cell.row -1, cell.column -1);
+        }
+        if(direction == this.UPRIGHT){
+            return this.getLogicalCell(cell.row -1, cell.column +1);
+        }
+        if(direction == this.DOWNLEFT){
+            return this.getLogicalCell(cell.row +1, cell.column -1);
+        }
+        if(direction == this.DOWNRIGHT){
+            return this.getLogicalCell(cell.row +1, cell.column +1);
         }
     }
     
-    addIeDisk(cell: Cell): void{
-        var tableCell = document.getElementById('' + cell.row + cell.column)
-        if (! tableCell.firstChild) {
-            var disk = document.createElement('i');
-            disk.setAttribute('class','fa fa-internet-explorer fa-2x');
-            tableCell.appendChild(disk);
-            cell.diskType='ie';
-            this.currentPlayer = 'chrome';
-        }
-    }
-    
-    addChromeDisk(cell: Cell): void{
-        var tableCell = document.getElementById('' + cell.row + cell.column)
-        if (! tableCell.firstChild) {
-            var disk = document.createElement('i');
-            disk.setAttribute('class','fa fa-chrome fa-2x');
-            tableCell.appendChild(disk);
-            cell.diskType='chrome';
-            this.currentPlayer = 'ie';
-        }
+    cellIsOffBoard(cell: Cell): boolean{
+        return (cell.row < 0 || cell.row >7 || cell.column < 0 || cell.column > 7);
     }
     
     setUpDisks(): void {
-        
-        var cell = document.getElementById('33');
-        if(!cell.firstChild){
+        this.addDisk(3,3,this.CHROME);
+        this.addDisk(4,4,this.CHROME);
+        this.addDisk(3,4,this.IE);
+        this.addDisk(4,3,this.IE);
+    }
+    
+    addDisk(row: number, column:number, type: string){
+        var cellId = '' + row + column;
+        var tableCell = document.getElementById(cellId);
+        if(!tableCell.firstChild){
             var disk = document.createElement('i');
-            disk.setAttribute('class','fa fa-chrome fa-2x');
-            cell.appendChild(disk);
+            if(type == this.IE){
+                disk.setAttribute('class','fa fa-internet-explorer fa-2x');
+                this.ieCount ++;
+            } else {
+                disk.setAttribute('class','fa fa-chrome fa-2x');
+                this.chromeCount ++;
+            }
+            tableCell.appendChild(disk);
+            var cell = this.getLogicalCell(row, column);
+            cell.type = type;
+            this.logCellDetails(cell, 'disk added to' );
         }
-        cell =  document.getElementById('44');
-        if(!cell.firstChild){
-            var disk = document.createElement('i');
-            disk.setAttribute('class','fa fa-chrome fa-2x');
-            cell.appendChild(disk);
-        }
-        cell =  document.getElementById('34');
-        if(!cell.firstChild){
-            var disk = document.createElement('i');
-            disk.setAttribute('class','fa fa-internet-explorer fa-2x');
-            cell.appendChild(disk);
-        }
-        cell =  document.getElementById('43');
-        if(!cell.firstChild){
-            var disk = document.createElement('i');
-            disk.setAttribute('class','fa fa-internet-explorer fa-2x');
-            cell.appendChild(disk);
-        }
-        
-        /* todo - update the board with details of the counters added */
+    }
+    
+    getLogicalCell(row: number, column:number): Cell{
+        return this.board.rows[row].cells[column];
     }
     
     ngAfterViewInit(){
+        this.currentPlayer = this.CHROME;
         this.setUpDisks();
     }
 }
