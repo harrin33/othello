@@ -33,13 +33,15 @@ import { AfterViewInit } from '@angular/core';
             </tbody>
         </table>
         <div>&nbsp;</div>
-        <div> current player:&nbsp;
+        <div *ngIf="(this.chromeCount + this.ieCount) < this.CELLS_ON_BOARD"> current player:&nbsp;
             <i *ngIf="currentPlayer == this.IE" class="fa fa-internet-explorer"></i>
             <i *ngIf="currentPlayer == this.CHROME" class="fa fa-chrome"></i>
                 &nbsp;{{currentPlayer}}</div>
         <div> chrome count: {{chromeCount}}</div>
         <div> ie count: {{ieCount}}</div>
-        <div *ngIf="winner">And the winner is...&nbsp;&nbsp;{{winner}}</div>
+        <div *ngIf="winner">And the winner is...&nbsp;&nbsp;{{winner}}
+            <div><button (click)="reset()">Play again</button></div>
+        </div>
         
     `
     
@@ -83,6 +85,16 @@ export class BoardComponent implements AfterViewInit{
         return rowArray;
     }
     
+    reset(){
+        this.board = null;
+        this.board = {rows: this.buildBoard()};
+        this.chromeCount = 0;
+        this.ieCount = 0;
+        this.winner = null;
+        this.currentPlayer = this.CHROME;
+        this.setUpDisks();
+    }
+    
     buildCells(rowno: number): Cell[] {
         let cellArray = [];
         for (var i = 0; i< this.COLUMNS; i++) { 
@@ -118,11 +130,12 @@ export class BoardComponent implements AfterViewInit{
         if(this.chromeCount + this.ieCount == this.CELLS_ON_BOARD){
             if(this.chromeCount > this.ieCount) {
                 this.winner = this.CHROME;
-            } 
-            if(this.chromeCount == this.ieCount){
-                this.winner = this.DRAW;
-            }    else {
-                this.winner = this.IE;
+            } else {
+                if(this.chromeCount == this.ieCount){
+                    this.winner = this.DRAW;
+                }  else {
+                    this.winner = this.IE;
+                }
             }
         }
     }
