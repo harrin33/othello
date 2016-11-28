@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
+import { Direction } from './direction';
 import { Cell } from './cell';
 import { Row } from './row';
 import { Board } from './board';
+import { Line } from './line';
 import { AfterViewInit } from '@angular/core'; 
 
 @Component({
@@ -44,20 +46,23 @@ export class BoardComponent implements AfterViewInit{
     
     CHROME: string = 'chrome';
     IE: string = 'ie';
-    LEFT: string = 'left';
-    RIGHT: string = 'right';
-    UP: string = 'up';
+    UP: Direction = {rowDelta: -1, columnDelta: 0, direction: 'up'};
+	LEFT: string = 'left';
     DOWN: string = 'down';
+	RIGHT: string = 'right';
     UPLEFT: string = 'upleft';
     UPRIGHT: string = 'upright';
     DOWNLEFT: string = 'downleft';
     DOWNRIGHT: string = 'downright';
     selectedCell: Cell;
-    adjacentCell: Cell;
+    //adjacentCell: Cell;
     currentPlayer: string;
     direction: string;
     chromeCount: number = 0;
     ieCount: number = 0;
+    //moves: Line[] = [];
+    moves: Line[];
+    
     
     log(s: string){
         console.log(s); 
@@ -113,9 +118,116 @@ export class BoardComponent implements AfterViewInit{
         An adjacent piece may be left, right, up, down, upLeft, upRight, downLeft or downRight. 
      */
     isMoveLegal(cell: Cell): boolean {
-        return(this.isFirstPieceLegal(cell));
+		return(this.computeMove(cell));
+        // return(this.isFirstPieceLegal(cell));
+    }
+	
+    /*
+     * From the starting cell, look in all directions. For each direction, store the colours of the counters
+     * in that direction. If the sequence begins with a different colour and ends in the same colour set the
+     * direction to valid. 
+     *
+     */
+	computeMove(cell: Cell): boolean {
+        this.moves = [];
+        var movePossible = false;
+		if(cell.row > 1) {
+			movePossible = this.checkUp(cell);
+            /*
+			if(cell.column > 1){
+				checkUpLeft(cell);
+			}
+			if(cell.column < 6){
+				checkUpRight(cell);
+			}
+            */
+		}
+        return movePossible;
+	}
+    
+    checkUp(cell: Cell): boolean {
+        return(this.mapAvailableMove(cell, this.UP));
+    }
+    
+    /*
+     * Check if a move is available in a particular direction from the starting cell. 
+     */
+    mapAvailableMove(cell: Cell, direction: Direction): boolean {
+        var workingCell: Cell = null;
+        var moveAvailable = false;
+        var directionIsValid = false;
+        var adjacentCell = this.getAdjacentCell(cell, direction);
+        
+        if(adjacentCell != null){
+            if(this.oppositeTypeFound(adjacentCell)){
+                this.storeCell(adjacentCell, direction);
+                workingCell = adjacentCell;
+                while((adjacentCell != null) && (adjacentCell.type != '') && !directionIsValid){
+                    adjacentCell = this.getAdjacentCell(workingCell, direction);
+                    if(this.sameTypeFound(adjacentCell)){
+                        directionIsValid = true;
+                        moveAvailable = true;
+                        this.lineFor(direction).isValid = true;
+                    } else {
+                        this.storeCell(adjacentCell, direction);
+                        workingCell = adjacentCell;
+                    }
+                }
+            }
+        }
+        return moveAvailable;
+    }
+    
+    getAdjacentCell(cell: Cell, direction: Direction): Cell {
+        var adjacentCell: Cell = null;
+        var adjacentCellRow = cell.row + direction.rowDelta;
+        var adjacentCellColumn = cell.column + direction.columnDelta;
+        if(adjacentCellRow < 8 && adjacentCellRow >= 0){
+            if(adjacentCellColumn < 8 && adjacentCellRow >= 0){
+                var adjacentCell = this.getLogicalCell(adjacentCellRow, adjacentCellColumn);
+            }    
+        }
+        return adjacentCell;
+    }
+    
+    
+    oppositeTypeFound(cell: Cell){
+        var cellType = cell.type;
+        return ((cell.type != '') && (cell.type != this.currentPlayer));
+    }
+    
+    sameTypeFound(cell: Cell){
+        return ((cell.type != '') && (cell.type == this.currentPlayer));
     }
      
+    /*
+     * Store details of a cell in a line. If the line doesn't exist create it first. 
+     */
+    storeCell (cell: Cell, dir: Direction) {
+        var line = this.lineFor(dir);
+        if(line == null){
+            var cellz : Cell[] = [];
+            cellz.push(cell);
+            var line: Line = {direction: dir, cells: cellz, isValid: false}
+            this.moves.push(line);
+        } else  {
+            line.cells.push(cell);
+        }
+    }
+    
+   lineFor(dir: Direction): Line {
+        var line: Line = null;
+        if(this.moves != null){
+            for (var i=0; i<this.moves.length; i++){
+                if(this.moves[i].direction == dir){
+                    line = this.moves[i];
+                }
+            }
+        }
+        return line;
+    }
+    
+     /*
     isFirstPieceLegal(cell: Cell): boolean {
         var legal = false;
                 
@@ -153,7 +265,9 @@ export class BoardComponent implements AfterViewInit{
         }
         return legal;
     }
+    */
     
+    /*
     nextCellSameTypeAsCurrentPlayer(cell: Cell, direction: string): boolean{
         var nextCell = this.getAdjacentCell(cell, direction);
         this.logCellDetails(nextCell, ' ' + direction);
@@ -171,7 +285,8 @@ export class BoardComponent implements AfterViewInit{
         }
         return false;
     }
-        
+    */
+    /*
     getAdjacentCell(cell: Cell, direction: string): Cell {
         if(direction == this.LEFT){
             return this.getLogicalCell(cell.row, cell.column -1);
@@ -198,10 +313,12 @@ export class BoardComponent implements AfterViewInit{
             return this.getLogicalCell(cell.row +1, cell.column +1);
         }
     }
-    
+    */
+    /*
     cellIsOffBoard(cell: Cell): boolean{
         return (cell.row < 0 || cell.row >7 || cell.column < 0 || cell.column > 7);
     }
+    */
     
     setUpDisks(): void {
         this.addDisk(3,3,this.CHROME);
