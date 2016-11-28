@@ -9,9 +9,6 @@ import { AfterViewInit } from '@angular/core';
 @Component({
     selector:'game-board',
     template:`
-    
-        <div>&nbsp;</div>
-              
         <table>
             <thead>
                 <tr>
@@ -36,8 +33,14 @@ import { AfterViewInit } from '@angular/core';
             </tbody>
         </table>
         <div>&nbsp;</div>
+        <div> current player:&nbsp;
+            <i *ngIf="currentPlayer == this.IE" class="fa fa-internet-explorer"></i>
+            <i *ngIf="currentPlayer == this.CHROME" class="fa fa-chrome"></i>
+                &nbsp;{{currentPlayer}}</div>
         <div> chrome count: {{chromeCount}}</div>
         <div> ie count: {{ieCount}}</div>
+        <div *ngIf="winner">And the winner is...&nbsp;&nbsp;{{winner}}</div>
+        
     `
     
 })
@@ -46,23 +49,25 @@ export class BoardComponent implements AfterViewInit{
     
     CHROME: string = 'chrome';
     IE: string = 'ie';
+    DRAW: string = "it's a draw";
+    ROWS = 8;
+    COLUMNS = 8;
+    CELLS_ON_BOARD = this.ROWS * this.COLUMNS;
+    winner: string;
     UP: Direction = {rowDelta: -1, columnDelta: 0, direction: 'up'};
-	LEFT: string = 'left';
-    DOWN: string = 'down';
-	RIGHT: string = 'right';
-    UPLEFT: string = 'upleft';
-    UPRIGHT: string = 'upright';
-    DOWNLEFT: string = 'downleft';
-    DOWNRIGHT: string = 'downright';
+	LEFT: Direction = {rowDelta: 0, columnDelta: -1, direction: 'left'};
+    DOWN: Direction = {rowDelta: +1, columnDelta: 0, direction:  'down'};
+	RIGHT: Direction = {rowDelta: 0, columnDelta: +1, direction:  'right'};
+    UPLEFT: Direction = {rowDelta: -1, columnDelta: -1, direction:  'upleft'};
+    UPRIGHT: Direction = {rowDelta: -1, columnDelta: +1, direction:  'upright'};
+    DOWNLEFT: Direction = {rowDelta: +1, columnDelta: -1, direction:  'downleft'};
+    DOWNRIGHT: Direction = {rowDelta: +1, columnDelta: +1, direction:  'downright'};
     selectedCell: Cell;
-    //adjacentCell: Cell;
     currentPlayer: string;
     direction: string;
     chromeCount: number = 0;
     ieCount: number = 0;
-    //moves: Line[] = [];
     moves: Line[];
-    
     
     log(s: string){
         console.log(s); 
@@ -72,7 +77,7 @@ export class BoardComponent implements AfterViewInit{
                         
     buildBoard(): Row[] {
         let rowArray = [];
-        for (var i=0; i<8; i++){
+        for (var i=0; i< this.ROWS; i++){
             rowArray.push(this.buildRow(i));
         }
         return rowArray;
@@ -80,7 +85,7 @@ export class BoardComponent implements AfterViewInit{
     
     buildCells(rowno: number): Cell[] {
         let cellArray = [];
-        for (var i = 0; i< 8; i++) { 
+        for (var i = 0; i< this.COLUMNS; i++) { 
             cellArray.push({row:rowno, column:i, type:''});
         }
         return cellArray;
@@ -95,15 +100,31 @@ export class BoardComponent implements AfterViewInit{
     onSelect(cell: Cell): void {
         this.selectedCell = cell;
         this.logCellDetails(cell, 'selected cell ');
-        if(this.isMoveLegal(cell)){
+        if(this.isMoveAvailable(cell)){
             if(this.currentPlayer == this.IE){
                 this.addDisk(cell.row, cell.column, this.IE);
+                this.flipDisks();
                 this.currentPlayer = this.CHROME;
             } else {
                 this.addDisk(cell.row, cell.column, this.CHROME);
+                this.flipDisks();
                 this.currentPlayer = this.IE;
             }    
+            this.computeWin();
         }        
+    }
+    
+    computeWin(){
+        if(this.chromeCount + this.ieCount == this.CELLS_ON_BOARD){
+            if(this.chromeCount > this.ieCount) {
+                this.winner = this.CHROME;
+            } 
+            if(this.chromeCount == this.ieCount){
+                this.winner = this.DRAW;
+            }    else {
+                this.winner = this.IE;
+            }
+        }
     }
     
     logCellDetails(cell: Cell, comment: string){
@@ -117,9 +138,8 @@ export class BoardComponent implements AfterViewInit{
         direction as this cell, there must be a cell of the same type at some point.  
         An adjacent piece may be left, right, up, down, upLeft, upRight, downLeft or downRight. 
      */
-    isMoveLegal(cell: Cell): boolean {
+    isMoveAvailable(cell: Cell): boolean {
 		return(this.computeMove(cell));
-        // return(this.isFirstPieceLegal(cell));
     }
 	
     /*
@@ -132,22 +152,45 @@ export class BoardComponent implements AfterViewInit{
         this.moves = [];
         var movePossible = false;
 		if(cell.row > 1) {
-			movePossible = this.checkUp(cell);
-            /*
-			if(cell.column > 1){
-				checkUpLeft(cell);
-			}
-			if(cell.column < 6){
-				checkUpRight(cell);
-			}
-            */
+            movePossible = this.mapAvailableMove(cell, this.UP);
+            if(cell.column > 1){
+               if( this.mapAvailableMove(cell, this.UPLEFT)){
+                    movePossible = true;
+               }
+            }
+            if(cell.column < (this.COLUMNS -2)){
+                if(this.mapAvailableMove(cell, this.UPRIGHT)){
+                    movePossible = true;
+                }
+            }
 		}
+        if(cell.column > 1){
+            if(this.mapAvailableMove(cell, this.LEFT)){
+                movePossible = true;
+            }
+        }
+        if(cell.column < (this.COLUMNS -2)){
+            if(this.mapAvailableMove(cell, this.RIGHT)){
+                movePossible = true;
+            }
+        }
+        if(cell.row < (this.ROWS -2)){
+            if( this.mapAvailableMove(cell, this.DOWN)){
+                movePossible = true;
+            }
+            if(cell.column > 1){
+               if( this.mapAvailableMove(cell, this.DOWNLEFT)){
+                    movePossible = true;
+               }
+            }
+            if(cell.column < (this.COLUMNS -2)){
+                if(this.mapAvailableMove(cell, this.DOWNRIGHT)){
+                    movePossible = true;
+                }
+            }
+        }
         return movePossible;
 	}
-    
-    checkUp(cell: Cell): boolean {
-        return(this.mapAvailableMove(cell, this.UP));
-    }
     
     /*
      * Check if a move is available in a particular direction from the starting cell. 
@@ -162,7 +205,9 @@ export class BoardComponent implements AfterViewInit{
             if(this.oppositeTypeFound(adjacentCell)){
                 this.storeCell(adjacentCell, direction);
                 workingCell = adjacentCell;
-                while((adjacentCell != null) && (adjacentCell.type != '') && !directionIsValid){
+                while   ((adjacentCell != null)
+                      && (adjacentCell.type != '')
+                      && !directionIsValid){
                     adjacentCell = this.getAdjacentCell(workingCell, direction);
                     if(this.sameTypeFound(adjacentCell)){
                         directionIsValid = true;
@@ -182,22 +227,24 @@ export class BoardComponent implements AfterViewInit{
         var adjacentCell: Cell = null;
         var adjacentCellRow = cell.row + direction.rowDelta;
         var adjacentCellColumn = cell.column + direction.columnDelta;
-        if(adjacentCellRow < 8 && adjacentCellRow >= 0){
-            if(adjacentCellColumn < 8 && adjacentCellRow >= 0){
+        if(adjacentCellRow < this.ROWS && adjacentCellRow >= 0){
+            if(adjacentCellColumn < this.COLUMNS && adjacentCellColumn >= 0){
                 var adjacentCell = this.getLogicalCell(adjacentCellRow, adjacentCellColumn);
             }    
         }
         return adjacentCell;
     }
     
-    
     oppositeTypeFound(cell: Cell){
-        var cellType = cell.type;
-        return ((cell.type != '') && (cell.type != this.currentPlayer));
+        return    ((cell != null) 
+                && (cell.type != '')
+                && (cell.type != this.currentPlayer));
     }
     
     sameTypeFound(cell: Cell){
-        return ((cell.type != '') && (cell.type == this.currentPlayer));
+        return    ((cell != null) 
+                && (cell.type != '')
+                && (cell.type == this.currentPlayer));
     }
      
     /*
@@ -215,7 +262,10 @@ export class BoardComponent implements AfterViewInit{
         }
     }
     
-   lineFor(dir: Direction): Line {
+    /*
+     * Get the row of cells in a particular direction. 
+     */
+     lineFor(dir: Direction): Line {
         var line: Line = null;
         if(this.moves != null){
             for (var i=0; i<this.moves.length; i++){
@@ -227,104 +277,37 @@ export class BoardComponent implements AfterViewInit{
         return line;
     }
     
-     /*
-    isFirstPieceLegal(cell: Cell): boolean {
-        var legal = false;
-                
-        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.LEFT)){
-            legal = true;
-            this.direction = this.LEFT;
-        }
-        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.RIGHT)){
-            legal = true;
-            this.direction = this.RIGHT;
-        }
-        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.UP)){
-            legal = true;
-            this.direction = this.UP;
-        }
-        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.DOWN)){
-            legal = true;
-            this.direction = this.DOWN;
-        }
-        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.UPLEFT)){
-            legal = true;
-            this.direction = this.UPLEFT;
-        }
-        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.UPRIGHT)){
-            legal = true;
-            this.direction = this.UPRIGHT;
-        }
-        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.DOWNLEFT)){
-            legal = true;
-            this.direction = this.DOWNLEFT;
-        }
-        if(this.nextCellOppositeTypeToCurrentPlayer(cell, this.DOWNRIGHT)){
-            legal = true;
-            this.direction = this.DOWNRIGHT;
-        }
-        return legal;
-    }
-    */
-    
-    /*
-    nextCellSameTypeAsCurrentPlayer(cell: Cell, direction: string): boolean{
-        var nextCell = this.getAdjacentCell(cell, direction);
-        this.logCellDetails(nextCell, ' ' + direction);
-        if((nextCell.type != '') && (nextCell.type == this.currentPlayer)) {
-            return true;
-        }
-        return false;
-    }
-    
-    nextCellOppositeTypeToCurrentPlayer(cell: Cell, direction: string): boolean{
-        var nextCell = this.getAdjacentCell(cell, direction);
-        this.logCellDetails(nextCell, ' ' + direction);
-        if((nextCell.type != '') && (nextCell.type != this.currentPlayer)) {
-            return true;
-        }
-        return false;
-    }
-    */
-    /*
-    getAdjacentCell(cell: Cell, direction: string): Cell {
-        if(direction == this.LEFT){
-            return this.getLogicalCell(cell.row, cell.column -1);
-        }
-        if(direction == this.RIGHT){
-            return this.getLogicalCell(cell.row, cell.column +1);
-        }
-        if(direction == this.UP){
-            return this.getLogicalCell(cell.row -1, cell.column);
-        }
-        if(direction == this.DOWN){
-            return this.getLogicalCell(cell.row +1, cell.column);
-        }
-        if(direction == this.UPLEFT){
-            return this.getLogicalCell(cell.row -1, cell.column -1);
-        }
-        if(direction == this.UPRIGHT){
-            return this.getLogicalCell(cell.row -1, cell.column +1);
-        }
-        if(direction == this.DOWNLEFT){
-            return this.getLogicalCell(cell.row +1, cell.column -1);
-        }
-        if(direction == this.DOWNRIGHT){
-            return this.getLogicalCell(cell.row +1, cell.column +1);
-        }
-    }
-    */
-    /*
-    cellIsOffBoard(cell: Cell): boolean{
-        return (cell.row < 0 || cell.row >7 || cell.column < 0 || cell.column > 7);
-    }
-    */
-    
     setUpDisks(): void {
         this.addDisk(3,3,this.CHROME);
         this.addDisk(4,4,this.CHROME);
         this.addDisk(3,4,this.IE);
         this.addDisk(4,3,this.IE);
+    }
+    
+    flipDisks(): void {
+        var line: Line;
+        var cells: Cell[];
+        for (var i=0; i<this.moves.length; i++){
+            line = this.moves[i];
+            if(line.isValid){
+                cells = line.cells;
+                for (var j=0; j<cells.length; j++){
+                    this.flipCell(cells[j]);
+                }
+            }
+        }
+    }
+    
+    flipCell(cell: Cell){
+        var cellId = '' + cell.row + cell.column;
+        var tableCell = document.getElementById(cellId);
+        tableCell.removeChild(tableCell.firstChild);
+        this.addDisk(cell.row, cell.column, this.currentPlayer);
+        if(this.currentPlayer == this.CHROME){
+            this.ieCount --;
+        } else {
+            this.chromeCount --;
+        }
     }
     
     addDisk(row: number, column:number, type: string){
