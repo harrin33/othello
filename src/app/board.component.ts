@@ -9,49 +9,57 @@ import { AfterViewInit } from '@angular/core';
 @Component({
     selector:'game-board',
     template:`
-        <table>
-            <thead>
-                <tr>
-                    <th>&nbsp;</th>
-                    <th>a</th>
-                    <th>b</th>
-                    <th>c</th>
-                    <th>d</th>
-                    <th>e</th>
-                    <th>f</th>
-                    <th>g</th>
-                    <th>h</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let row of board.rows">
-                    <td class="coord">{{row.no + 1}}</td>
-                    <td *ngFor="let cell of row.cells"
-                    [class.selected]="cell === selectedCell"
-                    (click)="onSelect(cell)" id={{cell.row}}{{cell.column}}></td>
-                </tr>
-            </tbody>
-        </table>
-        <div>&nbsp;</div>
-        <div class="gametext" *ngIf="(this.chromeCount + this.ieCount) < this.CELLS_ON_BOARD"> current player:&nbsp;
-            <i *ngIf="currentPlayer == this.IE" class="fa fa-internet-explorer"></i>
-            <i *ngIf="currentPlayer == this.CHROME" class="fa fa-chrome"></i>
-                &nbsp;{{currentPlayer}}</div>
-        <div class="gametext"> 
-            chrome count: 
-            <i class="fa fa-chrome"></i>
-            &nbsp;{{chromeCount}}
-            &nbsp;&nbsp;&nbsp; 
-            ie count: 
-            <i class="fa fa-internet-explorer"></i>
-            &nbsp;{{ieCount}}
-         </div>
-         
-        <div *ngIf="winner">And the winner is...&nbsp;&nbsp;{{winner}}
-            <div><button (click)="reset()">Play again</button></div>
-        </div>
-        
-        
+    
+    	<div [class.btn]="!startGame" [class.fadeout]="startGame">
+    		<button (click)="start()">Start game</button>
+    	</div>
+    	    	
+    	<div [class.hide]="!startGame" [class.fadein]="startGame">
+    	    		    	
+		<table>
+		    <thead>
+			<tr>
+			    <th>&nbsp;</th>
+			    <th>a</th>
+			    <th>b</th>
+			    <th>c</th>
+			    <th>d</th>
+			    <th>e</th>
+			    <th>f</th>
+			    <th>g</th>
+			    <th>h</th>
+			</tr>
+		    </thead>
+		    <tbody>
+			<tr *ngFor="let row of board.rows">
+			    <td class="coord">{{row.no + 1}}</td>
+			    <td *ngFor="let cell of row.cells"
+			    [class.selected]="cell === selectedCell"
+			    (click)="onSelect(cell)" id={{cell.row}}{{cell.column}}></td>
+			</tr>
+		    </tbody>
+		</table>
+	
+		<div>&nbsp;</div>
+		<div class="player" *ngIf="(this.chromeCount + this.ieCount) < this.CELLS_ON_BOARD"> current player:&nbsp;
+		    <i *ngIf="currentPlayer == this.IE" class="fa fa-internet-explorer"></i>
+		    <i *ngIf="currentPlayer == this.CHROME" class="fa fa-chrome"></i>
+			&nbsp;{{currentPlayer}}</div>
+		<div class="gametext"> 
+		    chrome count: 
+		    <i class="fa fa-chrome"></i>
+		    &nbsp;{{chromeCount}}
+		    &nbsp;&nbsp;&nbsp; 
+		    ie count: 
+		    <i class="fa fa-internet-explorer"></i>
+		    &nbsp;{{ieCount}}
+		 </div>
+		 
+		<div class="btn" *ngIf="winner">And the winner is...&nbsp;&nbsp;{{winner}}
+		    <div><button (click)="reset()">Play again</button></div>
+		</div>
+	</div>
+	
     `
     
 })
@@ -79,6 +87,7 @@ export class BoardComponent implements AfterViewInit{
     chromeCount: number = 0;
     ieCount: number = 0;
     moves: Line[];
+    startGame = false;
     
     log(s: string){
         console.log(s); 
@@ -147,6 +156,10 @@ export class BoardComponent implements AfterViewInit{
                 }
             }
         }
+    }
+    
+    start(){
+    	this.startGame = true;
     }
     
     logCellDetails(cell: Cell, comment: string){
@@ -338,10 +351,10 @@ export class BoardComponent implements AfterViewInit{
         if(!tableCell.firstChild){
             var disk = document.createElement('i');
             if(type == this.IE){
-                disk.setAttribute('class','fa fa-internet-explorer fa-2x');
+                disk.setAttribute('class','fa fa-internet-explorer fa-2x fadein');
                 this.ieCount ++;
             } else {
-                disk.setAttribute('class','fa fa-chrome fa-2x');
+                disk.setAttribute('class','fa fa-chrome fa-2x fadein');
                 this.chromeCount ++;
             }
             tableCell.appendChild(disk);
