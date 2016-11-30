@@ -33,15 +33,24 @@ import { AfterViewInit } from '@angular/core';
             </tbody>
         </table>
         <div>&nbsp;</div>
-        <div *ngIf="(this.chromeCount + this.ieCount) < this.CELLS_ON_BOARD"> current player:&nbsp;
+        <div class="gametext" *ngIf="(this.chromeCount + this.ieCount) < this.CELLS_ON_BOARD"> current player:&nbsp;
             <i *ngIf="currentPlayer == this.IE" class="fa fa-internet-explorer"></i>
             <i *ngIf="currentPlayer == this.CHROME" class="fa fa-chrome"></i>
                 &nbsp;{{currentPlayer}}</div>
-        <div> chrome count: {{chromeCount}}</div>
-        <div> ie count: {{ieCount}}</div>
+        <div class="gametext"> 
+            chrome count: 
+            <i class="fa fa-chrome"></i>
+            &nbsp;{{chromeCount}}
+            &nbsp;&nbsp;&nbsp; 
+            ie count: 
+            <i class="fa fa-internet-explorer"></i>
+            &nbsp;{{ieCount}}
+         </div>
+         
         <div *ngIf="winner">And the winner is...&nbsp;&nbsp;{{winner}}
             <div><button (click)="reset()">Play again</button></div>
         </div>
+        
         
     `
     
