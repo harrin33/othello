@@ -168,13 +168,18 @@ export class BoardComponent implements AfterViewInit{
     }
     
     /*
-      A legal move requires two things: 
+      A legal move requires these things: 
+        The selected cell must be empty. 
         An adjacent cell of the opposite type. Continuing down the line of cells in the same
         direction as this cell, there must be a cell of the same type at some point.  
         An adjacent piece may be left, right, up, down, upLeft, upRight, downLeft or downRight. 
      */
     isMoveAvailable(cell: Cell): boolean {
-		return(this.computeMove(cell));
+        (cell.type == '') {
+          return(this.computeMove(cell));
+        } else {
+		      return false;
+        }
     }
 	
     /*
