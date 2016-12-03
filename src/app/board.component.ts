@@ -175,7 +175,7 @@ export class BoardComponent implements AfterViewInit{
         An adjacent piece may be left, right, up, down, upLeft, upRight, downLeft or downRight. 
      */
     isMoveAvailable(cell: Cell): boolean {
-        (cell.type == '') {
+        if(cell.type == '') {
           return(this.computeMove(cell));
         } else {
 		      return false;
